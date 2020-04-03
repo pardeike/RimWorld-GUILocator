@@ -5,30 +5,44 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using Verse;
 
 namespace GUILocator
 {
-	public static class State
+	class GUILocator : Mod
 	{
-		public static bool useFullClassname = false;
-		public static List<string> calls = new List<string>();
-	}
+		public static GUILocatorSettings Settings;
 
-	[StaticConstructorOnStartup]
-	class Main
-	{
-		static Main()
+		public GUILocator(ModContentPack content) : base(content)
 		{
-			var harmony = new Harmony("net.pardeike.guilocator");
-			harmony.PatchAll();
+			Settings = GetSettings<GUILocatorSettings>();
+		}
+
+		public override void DoSettingsWindowContents(Rect inRect)
+		{
+			GUILocatorSettings.DoWindowContents(inRect);
+		}
+
+		public override string SettingsCategory()
+		{
+			return "GUILocator";
 		}
 	}
 
-	[HarmonyPatch(typeof(UIRoot_Play))]
-	[HarmonyPatch(nameof(UIRoot_Play.UIRootOnGUI))]
+	[StaticConstructorOnStartup]
+	public static class Patcher
+	{
+		static Patcher()
+		{
+			var harmony = new Harmony("net.pardeike.rimworld.mods.guilocator");
+			harmony.PatchAll();
+			Log.Warning("GUILocator enabled - middle mouse click on GUI to activate");
+		}
+	}
+
+	[HarmonyPatch(typeof(Root))]
+	[HarmonyPatch(nameof(Root.OnGUI))]
 	class UIRoot_Play_UIRootOnGUI_Patch
 	{
 		static bool lastMouseState = false;
@@ -38,13 +52,8 @@ namespace GUILocator
 			var mouseState = Input.GetMouseButton(2);
 			if (mouseState == lastMouseState) return;
 			lastMouseState = mouseState;
-			if (mouseState == false)
-			{
-				State.calls.Sort((a, b) => a.Length != b.Length ? a.Length.CompareTo(b.Length) : string.Compare(a, b));
-				var result = State.calls.ToArray().Join(null, "\n");
-				Log.Warning($"{result}\n");
-				State.calls.Clear();
-			}
+			if (mouseState) return;
+			State.PresentMenu();
 		}
 	}
 
@@ -76,28 +85,14 @@ namespace GUILocator
 				});
 		}
 
-		static string MethodString(MethodBase method)
-		{
-			var name = method.Name; // DMD<DMD<DrawWindowBackground_Patch0>?-1840475648::DrawWindowBackground_Patch0>
-			var match = Regex.Match(method.Name, @"DMD<DMD<.+_Patch\d+>\?-?\d+::(.+)_Patch\d+>");
-			if (match.Success)
-				name = match.Groups[1].Value;
-			var t = method.DeclaringType;
-			return $"{(State.useFullClassname ? t.FullName : t.Name)}.{name}";
-		}
-
 		public static void TestRect(Rect rect)
 		{
 			if ((Mouse.IsOver(rect) == false)) return;
 			if (Input.GetMouseButton(2) == false) return;
+			Event.current.Use();
 			var trace = new StackTrace(false);
-			var call = trace.GetFrames()
-				.Skip(1)
-				.Reverse()
-				.ToArray()
-				.Join(l => MethodString(l.GetMethod()), " > ");
-			if (State.calls.Contains(call) == false)
-				State.calls.Add(call);
+			var key = Element.MethodString(trace.GetFrame(1).GetMethod());
+			State.calls[key] = new Element(trace);
 		}
 
 		public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase original)

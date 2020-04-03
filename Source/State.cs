@@ -1,49 +1,91 @@
-﻿using RimWorld;
+﻿using HarmonyLib;
+using RimWorld;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using Verse;
 
 namespace GUILocator
 {
 	public static class State
 	{
-		public static bool useFullClassname = false;
-		public static int numberOfMethodsToDisplay = 3;
-		public static Dictionary<string, Element> calls = new Dictionary<string, Element>();
+		static readonly Dictionary<string, MethodBase> originals = new Dictionary<string, MethodBase>();
+		static readonly Dictionary<MethodBase, Element> calls = new Dictionary<MethodBase, Element>();
+
+		public static MethodBase GetRealMethod(this StackFrame frame)
+		{
+			var member = frame.GetMethod();
+			if (originals.TryGetValue(member.Name, out var original))
+				return original;
+			if (member.Name.Contains("DMD<DMD"))
+				Log.Warning($"Found untranslated member [{member.Name}]");
+			return member;
+		}
 
 		public static void PresentMenu()
 		{
 			var elements = calls.Values.ToList();
+			calls.Clear();
+
 			if (elements.Count == 0) return;
-			elements.Sort();
+			elements.Sort(new Element.Comparer());
 
 			var mouse = UI.MousePositionOnUI;
-			FloatMenuUtility.MakeMenu(elements.AsEnumerable(), element => element.GetPath(numberOfMethodsToDisplay), element => delegate ()
+			FloatMenuUtility.MakeMenu(elements.AsEnumerable(), element => element.GetPath(GUILocator.Settings.numberOfMethodsToDisplay), element => delegate ()
 			{
 				var options = element.trace
 					.GetFrames()
 					.Skip(1)
-					.Select(f => f.GetMethod())
-					.Select(method =>
+					.Select(f => f.GetRealMethod())
+					.Select(member =>
 					{
-						var label = $"{method.DeclaringType.FullName}.{Element.MethodString(method)}";
-						return new FloatMenuOption(label, delegate ()
+						var path = member.DeclaringType.Assembly.Location;
+						if (path == null || path.Length == 0)
 						{
-							var token = method.MetadataToken;
+							var contentPack = LoadedModManager.RunningMods.FirstOrDefault(m => m.assemblies.loadedAssemblies.Contains(member.DeclaringType.Assembly));
+							if (contentPack != null)
+							{
+								path = ModContentPack.GetAllFilesForModPreserveOrder(contentPack, "Assemblies/", p => p.ToLower() == ".dll", null)
+									.Select(fileInfo => fileInfo.Item2.FullName)
+									.First(dll =>
+									{
+										var assembly = Assembly.ReflectionOnlyLoadFrom(dll);
+										return assembly.GetType(member.DeclaringType.FullName) != null;
+									});
+							}
+						}
+
+						return new FloatMenuOption(Element.MethodString(member), delegate ()
+						{
+							var token = member.MetadataToken;
 							if (token != 0)
-								_ = Process.Start(GUILocator.Settings.dnSpyPath, $"\"{GUILocator.Settings.dllPath}\" --select 0x{token:X8}");
-						},
-						MenuOptionPriority.Default, null, null, 0f, null, null)
-						{
-							Disabled = method.MetadataToken == 0
-						};
+								_ = Process.Start(GUILocator.Settings.dnSpyPath, $"\"{path}\" --select 0x{token:X8}");
+						}, MenuOptionPriority.Default, null, null, 0f, null, null)
+						{ Disabled = member.MetadataToken == 0 };
 					});
 				if (options.Any())
 					Find.WindowStack.Add(new FloatMenu(options.ToList()));
 			});
+		}
 
-			calls.Clear();
+		static void PatchPostfix(MethodBase __result, MethodBase original)
+		{
+			originals[__result.Name] = original;
+		}
+
+		public static void RegisterOriginalsPatch(Harmony harmony)
+		{
+			var t_PatchFunctions = AccessTools.TypeByName("HarmonyLib.PatchFunctions");
+			var m_UpdateWrapper = AccessTools.Method(t_PatchFunctions, "UpdateWrapper");
+			var m_PatchPostfix = SymbolExtensions.GetMethodInfo(() => PatchPostfix(null, null));
+			_ = harmony.Patch(m_UpdateWrapper, postfix: new HarmonyMethod(m_PatchPostfix));
+		}
+
+		public static void Add(StackTrace trace)
+		{
+			var key = trace.GetFrame(1).GetRealMethod();
+			calls[key] = new Element(trace);
 		}
 	}
 }

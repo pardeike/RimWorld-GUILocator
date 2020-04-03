@@ -1,20 +1,32 @@
 ﻿using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 
 namespace GUILocator
 {
-	public class Element : IComparable<Element>
+	public class Element
 	{
+		public class Comparer : IComparer<Element>
+		{
+			public int Compare(Element x, Element y)
+			{
+				if (GUILocator.Settings.sortByAddedOrder)
+					return x.added.CompareTo(y.added);
+				return x.GetPath(0).CompareTo(y.GetPath(0));
+			}
+		}
+
+		public DateTime added;
 		public StackTrace trace;
 		public string path;
 		public int cropCount = 2;
 
 		public Element(StackTrace trace)
 		{
+			added = new DateTime();
 			this.trace = trace;
 		}
 
@@ -25,22 +37,13 @@ namespace GUILocator
 				.Take(cropCount)
 				.Reverse()
 				.ToArray()
-				.Join(l => MethodString(l.GetMethod()), " > ");
+				.Join(l => MethodString(l.GetRealMethod()), " > ");
 		}
 
-		public static string MethodString(MethodBase method)
+		public static string MethodString(MethodBase member)
 		{
-			var name = method.Name; // DMD<DMD<DrawWindowBackground_Patch0>?-1840475648::DrawWindowBackground_Patch0>
-			var match = Regex.Match(method.Name, @"DMD<DMD<.+_Patch\d+>\?-?\d+::(.+)_Patch\d+>");
-			if (match.Success)
-				name = match.Groups[1].Value;
-			var t = method.DeclaringType;
-			return $"{(State.useFullClassname ? t.FullName : t.Name)}.{name}";
-		}
-
-		public int CompareTo(Element other)
-		{
-			return string.Compare(GetPath(0), other.GetPath(0));
+			var t = member.DeclaringType;
+			return $"{(GUILocator.Settings.useFullClassname ? t.FullName : t.Name)}.{member.Name}";
 		}
 	}
 }

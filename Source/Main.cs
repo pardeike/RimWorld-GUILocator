@@ -36,6 +36,7 @@ namespace GUILocator
 		static Patcher()
 		{
 			var harmony = new Harmony("net.pardeike.rimworld.mods.guilocator");
+			State.RegisterOriginalsPatch(harmony);
 			harmony.PatchAll();
 			Log.Warning("GUILocator enabled - middle mouse click on GUI to activate");
 		}
@@ -91,8 +92,7 @@ namespace GUILocator
 			if (Input.GetMouseButton(2) == false) return;
 			Event.current.Use();
 			var trace = new StackTrace(false);
-			var key = Element.MethodString(trace.GetFrame(1).GetMethod());
-			State.calls[key] = new Element(trace);
+			State.Add(trace);
 		}
 
 		public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, MethodBase original)

@@ -4,6 +4,7 @@
 	<author>Andreas Pardeike</author>
 	<supportedVersions>
 		<li>1.1</li>
+		<li>1.2</li>
 	</supportedVersions>
 	<packageId>brrainz.guilocator</packageId>
 	<description>A small helper mod that logs most drawing methods involved in GUI drawing when you middle-mouse click on a graphical element. Currently only patches methods in Verse.Widgets that contain a Rect parameter.</description>

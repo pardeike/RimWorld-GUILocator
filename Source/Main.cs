@@ -88,8 +88,11 @@ namespace GUILocator
 
 		public static void TestRect(Rect rect)
 		{
+			if (Find.WindowStack == null) return;
 			if ((Mouse.IsOver(rect) == false)) return;
 			if (Input.GetMouseButton(2) == false) return;
+			if (Event.current.type == EventType.Repaint) return;
+			if (Event.current.type == EventType.Layout) return;
 			Event.current.Use();
 			var trace = new StackTrace(false);
 			State.Add(trace);

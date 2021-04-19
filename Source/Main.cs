@@ -39,6 +39,7 @@ namespace GUILocator
 			State.RegisterOriginalsPatch(harmony);
 			harmony.PatchAll();
 			Log.Warning("GUILocator enabled - middle mouse click on GUI to activate");
+			ModCounter.Trigger();
 		}
 	}
 

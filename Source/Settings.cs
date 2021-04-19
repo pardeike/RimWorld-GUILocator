@@ -38,7 +38,7 @@ namespace GUILocator
 			_ = list.Label("Path to dnSpy.exe");
 			GUILocator.Settings.dnSpyPath = list.TextEntry(GUILocator.Settings.dnSpyPath);
 			if (ButtonText(list, "Download"))
-				_ = Process.Start("https://github.com/0xd4d/dnSpy/releases/latest");
+				_ = Process.Start("https://github.com/dnSpy/dnSpy/releases/latest");
 			list.Gap();
 
 			_ = list.Label($"Number of methods to display: {GUILocator.Settings.numberOfMethodsToDisplay}");

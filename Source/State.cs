@@ -56,13 +56,14 @@ namespace GUILocator
 							}
 						}
 
-						return new FloatMenuOption(Element.MethodString(member), delegate ()
+						var option = Misc.FloatMenuOption(Element.MethodString(member), delegate ()
 						{
 							var token = member.MetadataToken;
 							if (token != 0)
 								_ = Process.Start(GUILocator.Settings.dnSpyPath, $"\"{path}\" --select 0x{token:X8}");
-						}, MenuOptionPriority.Default, null, null, 0f, null, null)
-						{ Disabled = member.MetadataToken == 0 };
+						});
+						option.Disabled = member.MetadataToken == 0;
+						return option;
 					});
 				if (options.Any())
 					Find.WindowStack.Add(new FloatMenu(options.ToList()));

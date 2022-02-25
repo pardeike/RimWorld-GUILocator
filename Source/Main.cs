@@ -36,9 +36,27 @@ namespace GUILocator
 		static Patcher()
 		{
 			var harmony = new Harmony("net.pardeike.rimworld.mods.guilocator");
-			State.RegisterOriginalsPatch(harmony);
 			harmony.PatchAll();
 			Log.Warning("GUILocator enabled - middle mouse click on GUI to activate");
+		}
+
+		public static MethodBase GetOriginalFromStackframe(this StackFrame frame)
+		{
+			if (frame == null) return null;
+			var member = Harmony.GetMethodFromStackframe(frame);
+			if (member is MethodInfo methodInfo)
+			{
+				var original = Harmony.GetOriginalMethod(methodInfo);
+				member = original ?? member;
+			}
+			return member;
+		}
+
+		public static string MethodString(this MethodBase member)
+		{
+			var t = member?.DeclaringType;
+			if (t == null) return null;
+			return $"{(GUILocator.Settings.useFullClassname ? t.FullName : t.Name)}.{member.Name}";
 		}
 	}
 

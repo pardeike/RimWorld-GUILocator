@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 
 namespace GUILocator
 {
@@ -32,18 +31,15 @@ namespace GUILocator
 
 		public string GetPath(int cropCount)
 		{
-			return trace.GetFrames()
+			var result = trace.GetFrames()
 				.Skip(1)
 				.Take(cropCount)
 				.Reverse()
+				.Select(f => f.GetOriginalFromStackframe().MethodString())
+				.OfType<string>()
 				.ToArray()
-				.Join(l => MethodString(l.GetRealMethod()), " > ");
-		}
-
-		public static string MethodString(MethodBase member)
-		{
-			var t = member.DeclaringType;
-			return $"{(GUILocator.Settings.useFullClassname ? t.FullName : t.Name)}.{member.Name}";
+				.Join(null, " > ");
+			return result;
 		}
 	}
 }

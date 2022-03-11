@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using Brrainz;
+using HarmonyLib;
 using RimWorld;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -38,6 +39,8 @@ namespace GUILocator
 			var harmony = new Harmony("net.pardeike.rimworld.mods.guilocator");
 			harmony.PatchAll();
 			Log.Warning("GUILocator enabled - middle mouse click on GUI to activate");
+
+			CrossPromotion.Install(76561197973010050);
 		}
 
 		public static MethodBase GetOriginalFromStackframe(this StackFrame frame)

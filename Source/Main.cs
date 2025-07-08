@@ -88,17 +88,22 @@ namespace GUILocator
 				.Where(m => m.GetParameters().Any(p => p.ParameterType == typeof(Rect)))
 				.SelectMany(m =>
 				{
-					if (m.IsGenericMethod == false) return new List<MethodInfo> { m };
-					if (m.Name == "Dropdown") return new List<MethodInfo>()
-					{
-						m.MakeGenericMethod(typeof(Bill_Production), typeof(Zone_Stockpile)),
+					if (m.IsGenericMethod == false) return [m];
+					if (m.Name == "Dropdown") return
+					[
+						m.MakeGenericMethod(typeof(Bill_Production), typeof(Pawn)),
 						m.MakeGenericMethod(typeof(Pawn), typeof(DrugPolicy)),
-						m.MakeGenericMethod(typeof(Pawn), typeof(HostilityResponseMode)),
+						m.MakeGenericMethod(typeof(ITab_Pawn_Feeding.BabyFeederPair), typeof(AutofeedMode)),
+						m.MakeGenericMethod(typeof(PenFoodCalculator), typeof(ThingDef)),
 						m.MakeGenericMethod(typeof(Pawn), typeof(MedicalCareCategory)),
-						m.MakeGenericMethod(typeof(Pawn), typeof(FoodRestriction)),
-						m.MakeGenericMethod(typeof(Pawn), typeof(Outfit)),
-						m.MakeGenericMethod(typeof(Pawn), typeof(Pawn))
-					};
+						m.MakeGenericMethod(typeof(Pawn), typeof(ThingDef)),
+						m.MakeGenericMethod(typeof(Pawn), typeof(MechanitorControlGroup)),
+						m.MakeGenericMethod(typeof(Pawn), typeof(FoodPolicy)),
+						m.MakeGenericMethod(typeof(Pawn), typeof(ApparelPolicy)),
+						m.MakeGenericMethod(typeof(Pawn), typeof(ReadingPolicy)),
+						m.MakeGenericMethod(typeof(Pawn), typeof(Pawn)),
+						m.MakeGenericMethod(typeof(Pawn), typeof(HostilityResponseMode)),
+					];
 					return new List<MethodInfo>()
 					{
 						m.MakeGenericMethod(typeof(int)),

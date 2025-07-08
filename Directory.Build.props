@@ -1,0 +1,9 @@
+<Project>
+	<PropertyGroup>
+		<ModName>GUILocator</ModName>
+		<ModFileName>GUILocator</ModFileName>
+		<Repository>https://github.com/pardeike/RimWorld-GUILocator</Repository>
+		<ModVersion>1.4.0.0</ModVersion>
+		<ProjectGuid>{ECFD82CE-7EEF-4A02-879C-10E7171AB64F}</ProjectGuid>
+	</PropertyGroup>
+</Project>

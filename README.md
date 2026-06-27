@@ -1,18 +1,21 @@
-## RimWorld GUILocator Mod
+# GUILocator
 
-### About
+GUILocator helps modders find the code behind RimWorld UI elements.
 
-A small helper mod that logs most drawing methods involved in GUI drawing when you middle-mouse click on a graphical element. Currently only patches methods in Verse.Widgets that contain a Rect parameter.
+Middle-click a visible UI element and the mod logs drawing methods involved in that area, focusing on `Verse.Widgets` methods with `Rect` parameters.
 
-Powered by [Harmony Patch Library](https://github.com/pardeike/Harmony)
+Use it when you are patching or debugging UI and need a faster way to find the drawing path.
 
-### License
+----
 
-Free. As in free beer. Copy, learn and be respectful.
+If you are looking for the Steam Workshop versions:
+https://steamcommunity.com/id/brrainz/myworkshopfiles/
 
-### Contact
+For mod support/feedback, visit my Discord:
+https://discord.gg/CYnWvrbNhD
 
-Andreas Pardeike  
-Email: andreas@pardeike.net  
-Steam: pardeike  
-Twitter: @pardeike
+Support me with as little as $1:
+https://patreon.com/pardeike
+
+ENJOY
+/Brrainz

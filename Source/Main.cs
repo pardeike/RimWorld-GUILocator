@@ -37,7 +37,7 @@ namespace GUILocator
 		static Patcher()
 		{
 			var harmony = new Harmony("net.pardeike.rimworld.mods.guilocator");
-			harmony.PatchAll();
+			harmony.PatchAll(Assembly.GetExecutingAssembly());
 			Log.Warning("GUILocator enabled - middle mouse click on GUI to activate");
 
 			CrossPromotion.Install(76561197973010050);
